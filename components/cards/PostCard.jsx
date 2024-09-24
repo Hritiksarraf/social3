@@ -117,7 +117,7 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
   console.log("Is saved:", saved); // Log the saved state
 
   return (
-    <div className="w-full max-w-xl rounded-lg flex flex-col gap-4 bg-dark-1 p-5 max-sm:gap-2">
+    <div className="w-full max-w-6xl flex flex-col gap-4  p-5 max-sm:gap-2 bg-white border-blue-300 border-4 rounded-xl shadow-lg shadow-blue-400 h- ">
       <div className="flex justify-between">
         <Link href={`/profile/${creator._id}/posts`}>
           <div className="flex gap-3 items-center">
@@ -125,11 +125,11 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
               src={creator.profilePhoto}
               alt="profile photo"
               width={50}
-              height={50}
+              height={25}
               className="rounded-full"
             />
             <div className="flex flex-col gap-1">
-              <p className="text-small-semibold text-light-1">
+              <p className="text-small-semibold text-black">
                 {creator.firstName} {creator.lastName}
               </p>
               <p className="text-subtle-medium text-light-3">
@@ -148,7 +148,7 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
         )}
       </div>
 
-      <p className="text-body-normal text-light-1 max-sm:text-small-normal">
+      <p className="text-body-normal text-black max-sm:text-small-normal">
         {post.caption}
       </p>
 
@@ -157,7 +157,7 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
         alt="post photo"
         width={200}
         height={150}
-        className="rounded-lg w-full"
+        className="rounded-lg w-full h-80"
       />
 
         <audio controls className="w-full mt-4">
@@ -189,7 +189,7 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
               onClick={handleLike}
             />
           )}
-          <p className="text-light-1">{post.likes.length}</p>
+          <p className="text-black">{post.likes.length}</p>
         </div>
         {loggedInUser.id === creator.clerkId && (
           <Delete
@@ -209,7 +209,7 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
               onClick={handleSave}
             />
           ))}
-          <p className="text-light-1">{post.tape.length}</p>
+          <p className="text-black">{post.tape.length}</p>
         </div>
 
         
