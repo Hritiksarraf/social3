@@ -16,6 +16,9 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
   const [like, setLike] = useState(false);
   const [saved, setSaved] = useState(false);
   const [userData, setUserData] = useState(null); // Initial state is null
+  const [likeCount, setLikeCount] = useState(0);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [saveCount, setSaveCount] = useState(0)
 
 
   //for collage
@@ -41,18 +44,27 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
 
   // Set the like and saved states based on the fetched userData
   useEffect(() => {
-    if (userData) {
+    if (userData && initialLoad) {
       if (userData.likedPosts?.some((item) => String(item) === String(post._id))) {
         setLike(true);
       }
       if (userData.savedPosts?.some((item) => String(item) === String(post._id))) {
         setSaved(true);
       }
+      setLikeCount(post.likes.length)
+      setSaveCount(post.tape.length)
+      setInitialLoad(false);
     }
-  }, [userData, post._id]);
+  }, [userData, post._id, initialLoad]);
 
   // Handle Save Post
   const handleSave = async () => {
+    if(!saved){
+      setSaveCount(saveCount+1)
+    }
+    else {
+      setSaveCount(saveCount-1)
+    }
     setSaved(!saved)
     try {
       const response = await fetch(
@@ -76,7 +88,14 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
   const handleLike = async () => {
     
     if(userData.pinsCount>0){
+      if(!like){
+        setLikeCount(likeCount+1)
+      }
+      else{
+        setLikeCount(likeCount-1)
+      }
       setLike(!like);
+
     try {
       const response = await fetch(
         `/api/user/${loggedInUser.id}/like/${post._id}`,
@@ -189,7 +208,7 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
               onClick={handleLike}
             />
           )}
-          <p className="text-light-1">{post.likes.length}</p>
+          <p className="text-light-1">{likeCount}</p>
         </div>
         {loggedInUser.id === creator.clerkId && (
           <Delete
@@ -209,7 +228,7 @@ const PostCard = ({ post, creator, loggedInUser, update }) => {
               onClick={handleSave}
             />
           ))}
-          <p className="text-light-1">{post.tape.length}</p>
+          <p className="text-light-1">{saveCount}</p>
         </div>
 
         

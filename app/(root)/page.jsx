@@ -4,11 +4,13 @@ import Loader from "@components/Loader";
 import PostCard from "@components/cards/PostCard";
 import { useEffect, useState } from "react";
 import jwt from "jsonwebtoken";
+import { useRouter } from 'next/navigation';
 
 const Home = () => {
   const [loading, setLoading] = useState(true);
   const [feedPost, setFeedPost] = useState([]);
   const [user, setUser] = useState(null);
+  const router = useRouter();
 
   const getFeedPost = async () => {
     const response = await fetch("/api/post");
@@ -22,6 +24,9 @@ const Home = () => {
     if (token) {
       const decodedUser = jwt.decode(token); // Decode user from token
       setUser(decodedUser); // Set user
+    }
+    else{
+      router.push('/sign-in')
     }
     getFeedPost();
   }, []);

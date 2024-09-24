@@ -9,30 +9,45 @@ import jwt from "jsonwebtoken";
 
 const UserCard = ({ userData, update }) => {
   
-  const [user, setUser] = useState(null);
-
+  const [isLoaded, setIsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const [user, setUser] = useState(null);
+  const [isFollowing, setIsFollowing] = useState(false);
   const [userInfo, setUserInfo] = useState({});
 
-  
+  const getUser = async () => {
+    try {
+      const response = await fetch(`/api/user/${user.id}`);
+      const data = await response.json();
+      setUserInfo(data);
+      setLoading(false);
+      setIsLoaded(true);
+
+      // Check if the current user is following userData
+      const following = data?.following?.some(
+        (item) => String(item) == String(userData._id)
+      );
+      setIsFollowing(following); // Set the following state based on the check
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    console.log("hey i am in usercard")
-    if (token) {
-      const decodedUser = jwt.decode(token); // Decode user from token
-      setUser(decodedUser); // Set user
-      console.log("hey i am in usercard")
+    if (token && !user) {
+      const decodedUser = jwt.decode(token);
+      setUser(decodedUser);
     }
-    setLoading(false)
-  }, []);
+  }, []); // Only run on the first render
 
-  const isFollowing = userInfo?.following?.find(
-    (item) => item._id === userData._id
-  );
-
+  useEffect(() => {
+    if (user) {
+      getUser();
+    }
+  }, [user]);
   const handleFollow = async () => {
+    setIsFollowing(!isFollowing);
     const response = await fetch(
       `/api/user/${user.id}/follow/${userData._id}`,
       {

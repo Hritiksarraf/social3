@@ -1,7 +1,5 @@
-
 import Loader from "@components/Loader";
 import { PersonAddAlt, PersonRemove } from "@mui/icons-material";
-import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { tabs } from "@constants";
 import Link from "next/link";
@@ -11,7 +9,7 @@ const ProfileCard = ({ userData, activeTab }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-
+  const [isFollowing, setIsFollowing] = useState(false);
   const [userInfo, setUserInfo] = useState({});
 
   const getUser = async () => {
@@ -21,19 +19,22 @@ const ProfileCard = ({ userData, activeTab }) => {
       setUserInfo(data);
       setLoading(false);
       setIsLoaded(true);
-      console.log(data);
+
+      // Check if the current user is following userData
+      const following = data?.following?.some(
+        (item) => String(item) == String(userData._id)
+      );
+      setIsFollowing(following); // Set the following state based on the check
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token && !user) {
       const decodedUser = jwt.decode(token);
       setUser(decodedUser);
-      console.log(decodedUser);
-      console.log("hey i am in profile card")
     }
   }, []); // Only run on the first render
 
@@ -43,23 +44,26 @@ const ProfileCard = ({ userData, activeTab }) => {
     }
   }, [user]);
 
-  const isFollowing = userInfo?.following?.find(
-    (item) => item._id === userData._id
-  );
-
   const handleFollow = async () => {
-    console.log(user,"hey i am user")
-    const response = await fetch(
-      `/api/user/${user.id}/follow/${userData._id}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    const data = await response.json();
-    setUserInfo(data);
+    setIsFollowing(!isFollowing);
+    try {
+      const response = await fetch(
+        `/api/user/${user.id}/follow/${userData._id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      setUserInfo(data);
+
+      // Toggle following state
+      
+    } catch (error) {
+      console.error("Error updating follow status:", error);
+    }
   };
 
   return loading ? (
@@ -100,25 +104,26 @@ const ProfileCard = ({ userData, activeTab }) => {
           </div>
         </div>
 
-        {user.id !== userData.clerkId &&
-          (isFollowing ? (
+        {user?.id !== userData.clerkId && (
+          isFollowing ? (
             <PersonRemove
               sx={{ color: "#7857FF", cursor: "pointer", fontSize: "40px" }}
-              onClick={() => handleFollow()}
+              onClick={handleFollow}
             />
           ) : (
             <PersonAddAlt
               sx={{ color: "#7857FF", cursor: "pointer", fontSize: "40px" }}
-              onClick={() => handleFollow()}
+              onClick={handleFollow}
             />
-          ))}
+          )
+        )}
       </div>
 
       <div className="flex gap-6">
         {tabs.map((tab) => (
           <Link
-            className={`tab ${activeTab === tab.name ? "bg-purple-1" : "bg-dark-2"
-              }`}
+            key={tab.name} // Add key to prevent React warnings
+            className={`tab ${activeTab === tab.name ? "bg-purple-1" : "bg-dark-2"}`}
             href={`/profile/${userData._id}/${tab.link}`}
           >
             {tab.name}

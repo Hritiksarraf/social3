@@ -8,12 +8,15 @@ import { dark } from "@clerk/themes";
 import Loader from "@components/Loader";
 import PushPinIcon from '@mui/icons-material/PushPin';
 import jwt from "jsonwebtoken";
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useRouter } from 'next/navigation';
 
 function LeftSideBar() {
     const [isLoaded, setIsLoaded] = useState(false);
     const [loading, setLoading] = useState(true);
     const [userData, setUserData] = useState({});
     const [user, setUser] = useState(null);  // Set initial value to null
+    const router = useRouter();
 
     const getUser = async () => {
         try {
@@ -45,6 +48,14 @@ function LeftSideBar() {
 
     if (loading || !isLoaded) {
         return <Loader />;
+    }
+
+    const handleLogOut =()=>{
+        const token = localStorage.getItem("token");
+        if(token){
+            localStorage.removeItem('token');
+            router.push('/sign-in')
+        }
     }
 
     return (
@@ -91,10 +102,12 @@ function LeftSideBar() {
                 {userData?.pinsCount} left
             </p>
             <hr />
-            <div className="flex gap-4 items-center">
+            <div className="gap-4 items-center">
                 {/* Uncomment the UserButton when you're ready to use it */}
                 {/* <UserButton appearance={{ baseTheme: dark }} afterSignOutUrl="/sign-in" /> */}
                 <p className="text-light-1 text-body-bold">Manage Account</p>
+                <button onClick={handleLogOut} className="text-light-1 pt-2 text-body-bold">Log out <LogoutIcon/></button>
+                
             </div>
             {/* Uncomment the SignedIn block when you're ready to use it */}
             {/* <SignedIn>
