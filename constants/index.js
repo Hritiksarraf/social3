@@ -13,9 +13,9 @@ export const sidebarLinks = [
     label: "Home",
   },
   {
-    icon: <AddPhotoAlternateOutlined sx={{ color: "gray", fontSize: "26px" }} />,
+    icon: <AddPhotoAlternateOutlined sx={{ color: "white", fontSize: "26px" }} />,
     route: "/create-post",
-    label: "Create Post" ,
+    label: "Create Post",
   },
   
 ];

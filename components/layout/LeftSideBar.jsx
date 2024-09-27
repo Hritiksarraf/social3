@@ -48,13 +48,13 @@ function LeftSideBar() {
     }
 
     return (
-        <div className="h-screen bg-gray-00 left-0 top-0 sticky overflow-auto px-10 py-6 flex flex-col gap-6 max-md:hidden 2xl:w-[350px] pr-20 custom-scrollbar">
+        <div className="h-screen left-0 top-0 sticky overflow-auto px-10 py-6 flex flex-col gap-6 max-md:hidden 2xl:w-[350px] pr-20 custom-scrollbar">
             <Link href="/">
                 <Image src="/assets/logovani.png" alt="logo" width={200} height={200} className="ml-4 -mb-4" />
             </Link>
             <div className="flex flex-col gap-2">
-                <div className="flex flex-col gap-2 items-center text-black">
-                    <Link href={`/profile/${userData.id}/posts`}>
+                <div className="flex flex-col gap-2 items-center text-light-1">
+                    <Link href={`/profile/${userData._id}/posts`}>
                         <img
                             src={userData?.profilePhoto}
                             alt="profile photo"
@@ -67,7 +67,7 @@ function LeftSideBar() {
                         {userData?.firstName} {userData?.lastName}
                     </p>
                 </div>
-                <div className="flex text-black justify-between">
+                <div className="flex text-light-1 justify-between">
                     <div className="flex flex-col items-center">
                         <p className="text-base-bold">{userData?.posts?.length}</p>
                         <p className="text-tiny-medium">Posts</p>
@@ -84,7 +84,7 @@ function LeftSideBar() {
             </div>
             <hr />
             <Menu />
-            <p className="text-black mx-3 text-body-bold">
+            <p className="text-light-1 mx-3 text-body-bold">
                 <span>
                     <PushPinIcon sx={{ color: "#7857FF", cursor: "pointer" }} />
                 </span>
@@ -94,14 +94,14 @@ function LeftSideBar() {
             <div className="flex gap-4 items-center">
                 {/* Uncomment the UserButton when you're ready to use it */}
                 {/* <UserButton appearance={{ baseTheme: dark }} afterSignOutUrl="/sign-in" /> */}
-                <p className="text-black text-body-bold">Manage Account</p>
+                <p className="text-light-1 text-body-bold">Manage Account</p>
             </div>
             {/* Uncomment the SignedIn block when you're ready to use it */}
             {/* <SignedIn>
                 <SignOutButton afterSignOutUrl="/sign-in">
                     <div className="flex cursor-pointer gap-4 items-center">
                         <Logout sx={{ color: "white", fontSize: "32px" }} />
-                        <p className="text-body-bold text-black">Log out</p>
+                        <p className="text-body-bold text-light-1">Log out</p>
                     </div>
                 </SignOutButton>
             </SignedIn> */}
