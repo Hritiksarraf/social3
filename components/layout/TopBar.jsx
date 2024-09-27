@@ -14,7 +14,7 @@ const TopBar = () => {
   const [search, setSearch] = useState("");
 
   return  (
-    <div className="flex justify-between items-center mt-2">
+    <div className="flex justify-between items-center mt-6">
       <div className="relative">
         <input
           type="text"
