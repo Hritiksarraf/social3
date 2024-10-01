@@ -48,3 +48,6 @@
 .tab {
   @apply px-4 py-2 rounded-lg text-light-1 text-small-bold
 }
+.locate-map{
+  @apply flex items-center gap-2 rounded-lg py-2.5 px-3 bg-gradient-to-tr from-[#e0c3fc] to-[#8ec5fc];
+}
