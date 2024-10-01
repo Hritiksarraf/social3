@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Add, Logout, Person, Search } from "@mui/icons-material";
+import { Add, Logout, Person, Search,LocationOn } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 // import { SignOutButton, SignedIn, UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
@@ -34,6 +34,13 @@ const TopBar = () => {
         onClick={() => router.push("/create-post")}
       >
         <Add /> <p>Create A Post</p>
+      </button>
+      <button 
+        className="locate-map"
+        onClick={() => router.push("/locate")}
+      >
+        <LocationOn/> 
+        <p>Locate in map</p>
       </button>
         <div className="flex gap-3">
         {/* <SignedIn>

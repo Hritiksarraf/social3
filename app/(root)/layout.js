@@ -1,5 +1,7 @@
 // import { ClerkProvider } from "@clerk/nextjs"
 import '../globals.css'
+import 'leaflet/dist/leaflet.css';
+
 import { Inter } from "next/font/google";
 import LeftSideBar from "@/components/layout/LeftSideBar";
 import TopBar from "@/components/layout/TopBar";
