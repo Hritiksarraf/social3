@@ -120,7 +120,7 @@ const Posting = ({ post, apiEndpoint, userDatas }) => {
       const data = await response.json();
       setUserData(data);
 
-      if (data.collage !== "") {
+      if (data?.collage !== "") {
         setCollageForm(false);
       }
     } catch (error) {
