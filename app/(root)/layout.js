@@ -23,7 +23,6 @@ export default function RootLayout({ children }) {
         <main className="flex flex-row">
         <LeftSideBar/>
           <MainContainer>
-           
         {children}
         
         </MainContainer>

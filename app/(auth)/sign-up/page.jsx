@@ -15,6 +15,9 @@ export default function Page() {
   const [collage, setCollage] = useState("");
   const [address, setAddress] = useState("");
   const [pincode, setPincode] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [colleges, setColleges] = useState([]);
+
   const router = useRouter(); // Using next/navigation's useRouter
 
   useEffect(() => {
@@ -22,6 +25,24 @@ export default function Page() {
       router.push('/');
     }
   }, [router]);
+  useEffect(() => {
+
+    fetch('http://universities.hipolabs.com/search')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setColleges(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching colleges:', error);
+        setLoading(false);
+      });
+  }, []);
 
   const handleChange = (e) => { // Fixed typo from 'handelChange' to 'handleChange'
     const { name, value } = e.target;
@@ -40,6 +61,35 @@ export default function Page() {
     const data = { firstname,lastname,collage,pincode,address,username, email, password, };
 
     try {
+      let collegeRes= await fetch("/api/maps/college",{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({name:collage})
+      })
+      console.log("clg",collegeRes)
+      if (!collegeRes.ok) {
+        throw new Error('Failed to add college');
+    }
+
+      
+      const locationresponse = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(collage)}&format=json`);
+      const locationdata = await locationresponse.json();
+      console.log("res",locationdata)
+      if(locationdata.length>0){
+        let updateRes = await fetch("/api/maps/college/change",{
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({name:username,collegeName:collage,lat:locationdata[0].lat,lng:locationdata[0].lon})
+        })
+        console.log("abc",updateRes)
+        if (!updateRes.ok) {
+          throw new Error('Failed to update college location');
+        }
+      }
       let res = await fetch('/api/auth/sign-up', {
         method: 'POST',
         headers: {
@@ -65,7 +115,9 @@ export default function Page() {
         progress: undefined,
         theme: 'light',
       });
+
       
+
 
       // Redirect to another page if needed
       router.push('/sign-in');
@@ -82,6 +134,9 @@ export default function Page() {
         theme: 'light',
       });
     }
+  };
+  const handleChanges = (event) => {
+    setCollage(event.target.value);
   };
 
   return (
@@ -103,7 +158,20 @@ export default function Page() {
       </div>
       <div className="relative mb-4">
         <label htmlFor="collage" className="leading-7 text-sm text-gray-600">Collage</label>
-        <input value={collage} onChange={handleChange} type="text" id="collage" name="collage" className="w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"/>
+        <div>
+      {loading ? (
+        <p>Loading colleges...</p>
+      ) : (
+        <select value={collage} onChange={handleChanges}>
+          <option value="">Select a college</option>
+          {colleges.map((college, index) => (
+            <option key={index} value={college.name}>
+              {college.name} - {college.country}
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
       </div>
       <div className="relative mb-4">
         <label htmlFor="addresh" className="leading-7 text-sm text-gray-600">Addresh</label>

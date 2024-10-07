@@ -4,24 +4,36 @@ import { connectToDB } from "@lib/mongodb/mongoose";
 export const POST = async(req,{params})=>{
     try {
         await connectToDB();
-        const college = await College.find(
-            { name: params?.name||"" }
+        const {name}= await req.json()
+        let college = await College.findOne(
+            { name: name||"" }
         )
-        let res;
+        
         if(!college){
-            res=await College.create(
+            college=await College.create(
                 {
-                    name:params.name,
+                    name:name,
+                    radioStations:[]
                 }
             )
-            if(!res){
+            if(!college){
                 return new Response("Failed to create college", { status: 500 });
             }
         }
         
-        return new Response(JSON.stringify(res), { status: 200 });
+        return new Response(JSON.stringify(college), { status: 200 });
     } catch (error) {
-        console.error(err);
-        return new Response("Failed to get user", { status: 500 });
+        console.error(error);
+        return new Response("Server Error", { status: 500 });
+    }
+}
+export const GET = async(req,{params})=>{
+    try {
+        await connectToDB();
+        const colleges = await College.find();
+        return new Response(JSON.stringify(colleges), { status: 200 });
+    } catch (error) {
+        console.error(error);
+        return new Response("Server Error", { status: 500 });
     }
 }
