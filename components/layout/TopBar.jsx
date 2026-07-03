@@ -1,65 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Add, Logout, Person, Search,LocationOn } from "@mui/icons-material";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-// import { SignOutButton, SignedIn, UserButton, useUser } from "@clerk/nextjs";
-import Link from "next/link";
-import Image from "next/image";
-import { dark } from "@clerk/themes";
-
+import { SearchIcon, PlusIcon, MapIcon } from "@components/icons";
 
 const TopBar = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
-  return  (
-    <div className="flex justify-between items-center mt-6">
-      <div className="relative">
+  const submitSearch = () => {
+    if (!search.trim()) return;
+    router.push(`/search/posts/${encodeURIComponent(search.trim())}`);
+  };
+
+  return (
+    <div className="flex justify-between items-center gap-3 mt-6">
+      <div className="flex-1 flex items-center gap-2.5 bg-surface-1 border border-white/[0.09] rounded-full px-4 py-3 focus-within:border-purple-1 transition-colors">
+        <SearchIcon size={17} strokeWidth={2.4} color="#8A8598" />
         <input
+          id="yv-search-input"
           type="text"
-          className="search-bar"
-          placeholder="Search posts, people, ..."
+          className="flex-1 bg-transparent outline-none text-[14px] font-semibold text-white placeholder:text-ink-3"
+          placeholder="Search posts, people..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-        />
-        <Search
-          className="search-icon"
-          onClick={() => router.push(`/search/posts/${search}`)}
+          onKeyDown={(e) => e.key === "Enter" && submitSearch()}
         />
       </div>
 
       <button
-        className="create-post-btn"
+        className="max-md:hidden flex items-center gap-2 rounded-full py-3 px-5 font-extrabold text-[14px] text-white shrink-0"
+        style={{
+          background: "linear-gradient(135deg, #7857FF, #FF0073)",
+          boxShadow: "0 12px 24px -10px rgba(120,87,255,0.9)",
+        }}
         onClick={() => router.push("/create-post")}
       >
-        <Add /> <p>Create A Post</p>
+        <PlusIcon size={16} strokeWidth={2.8} color="#fff" />
+        Create post
       </button>
-      <button 
-        className="locate-map"
+
+      <button
+        className="max-md:hidden flex items-center gap-2 rounded-full py-3 px-5 font-extrabold text-[14px] text-ink-2 bg-surface-2 border border-white/10 shrink-0"
         onClick={() => router.push("/locate")}
       >
-        <LocationOn/> 
-        <p>Locate in map</p>
+        <MapIcon size={16} strokeWidth={2.4} color="#C3BED2" />
+        Locate
       </button>
-        <div className="flex gap-3">
-        {/* <SignedIn>
-            <SignOutButton>
-                <div className='flex cursor-pointer gap-4 items-center  md:hidden'>
-                    <Logout sx={{color:"white" , fontSize:"32px"}}/>
-                    <p className='text-body-bold text-light-1'></p>
-                </div>
-            </SignOutButton>
-        </SignedIn> */}
-        <Link href='/'>
-         <div className="rounded-full md:hidden">
-         {/* <UserButton  appearance={{baseTheme: dark}}  afterSignOutUrl="/sign-in" /> */}
-         </div>
-        
-            
-        </Link>
-        </div>
-      
     </div>
   );
 };

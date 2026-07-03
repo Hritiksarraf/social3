@@ -3,44 +3,28 @@
 import Loader from "@components/Loader";
 import Posting from "@components/form/Posting";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import { useCurrentUser } from "@lib/hooks/useCurrentUser";
 
 const EditPost = () => {
   const { id } = useParams();
+  const post = useQuery(api.posts.getById, { postId: id });
+  const { currentUser, currentUserLoading } = useCurrentUser();
 
-  const [loading, setLoading] = useState(true);
-
-  const [postData, setPostData] = useState({});
-
-  const getPost = async () => {
-    const response = await fetch(`/api/post/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await response.json();
-    setPostData(data);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    getPost();
-  }, [id]);
-
-  const postInfo = {
-    creatorId: postData?.creator?._id,
-    caption: postData?.caption,
-    tag: postData?.tag,
-    postPhoto: postData?.postPhoto,
+  if (post === undefined || currentUserLoading || !currentUser) {
+    return <Loader />;
   }
 
-  console.log(postInfo)
-  return loading ? (
-    <Loader />
-  ) : (
+  const postInfo = {
+    caption: post?.caption,
+    tag: post?.tag,
+    postPhoto: post?.postPhoto,
+  };
+
+  return (
     <div className="pt-6">
-      <Posting post={postInfo} apiEndpoint={`/api/post/${id}`}/>
+      <Posting post={postInfo} mode="edit" postId={id} currentUser={currentUser} />
     </div>
   );
 };

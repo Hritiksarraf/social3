@@ -2,54 +2,35 @@
 
 import Loader from "@components/Loader";
 import PostCard from "@components/cards/PostCard";
-import Link from "next/link";
+import SearchTabs from "@components/ui/SearchTabs";
+import EmptyState from "@components/ui/EmptyState";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-
-import jwt from "jsonwebtoken";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import { useCurrentUser } from "@lib/hooks/useCurrentUser";
 
 const SearchPost = () => {
   const { query } = useParams();
-  const [user, setUser] = useState(null);
+  const searchedPosts = useQuery(api.posts.search, { queryText: query });
+  const { currentUser, currentUserLoading } = useCurrentUser();
 
-  const [loading, setLoading] = useState(true);
+  if (searchedPosts === undefined || currentUserLoading || !currentUser) {
+    return <Loader />;
+  }
 
-  const [searchedPosts, setSearchedPosts] = useState([]);
+  return (
+    <div className="flex flex-col gap-6">
+      <SearchTabs query={query} active="posts" />
 
-  const getSearchedPosts = async () => {
-    const response = await fetch(`/api/post/search/${query}`);
-    const data = await response.json();
-    setSearchedPosts(data);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const decodedUser = jwt.decode(token); // Decode user from token
-      setUser(decodedUser); // Set user
-    }
-    getSearchedPosts();
-  }, [query]);
-
-  
-
-  return loading ? (
-    <Loader />
-  ) : (
-    <div className="flex flex-col gap-10">
-      <div className="flex gap-6">
-        <Link className="tab bg-purple-1" href={`/search/posts/${query}`}>
-          Posts
-        </Link>
-        <Link className="tab bg-dark-2" href={`/search/people/${query}`}>
-          People
-        </Link>
+      <div className="flex flex-col gap-8 items-center">
+        {searchedPosts.length === 0 ? (
+          <EmptyState emoji="🔍" title="Nothing found" subtitle={`No posts match "${decodeURIComponent(query)}".`} />
+        ) : (
+          searchedPosts.map((post) => (
+            <PostCard key={post._id} post={post} currentUser={currentUser} />
+          ))
+        )}
       </div>
-
-      {searchedPosts.map((post) => (
-        <PostCard key={post._id} post={post} creator={post.creator} loggedInUser={user} update={getSearchedPosts}/>
-      ))}
     </div>
   );
 };

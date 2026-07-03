@@ -1,134 +1,86 @@
-import Loader from "@components/Loader";
-import { PersonAddAlt, PersonRemove } from "@mui/icons-material";
-import React, { useEffect, useState } from "react";
+"use client";
+
 import { tabs } from "@constants";
 import Link from "next/link";
-import jwt from "jsonwebtoken";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
+import Avatar from "@components/ui/Avatar";
+import ClubBadge from "@components/ui/ClubBadge";
+import Button from "@components/ui/Button";
 
-const ProfileCard = ({ userData, activeTab }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [userInfo, setUserInfo] = useState({});
+const ProfileCard = ({ userData, activeTab, currentUser }) => {
+  const toggleFollow = useMutation(api.users.toggleFollow);
 
-  const getUser = async () => {
-    try {
-      const response = await fetch(`/api/user/${user.id}`);
-      const data = await response.json();
-      setUserInfo(data);
-      setLoading(false);
-      setIsLoaded(true);
+  const isFollowing = currentUser?.following?.some((id) => id === userData._id);
+  const isOwnProfile = currentUser?._id === userData._id;
 
-      // Check if the current user is following userData
-      const following = data?.following?.some(
-        (item) => String(item) == String(userData._id)
-      );
-      setIsFollowing(following); // Set the following state based on the check
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
+  const handleFollow = () => {
+    toggleFollow({ userId: currentUser._id, followId: userData._id });
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token && !user) {
-      const decodedUser = jwt.decode(token);
-      setUser(decodedUser);
-    }
-  }, []); // Only run on the first render
+  return (
+    <div className="flex flex-col -mt-6 -mx-4 md:-mx-10 lg:-mx-4 xl:-mx-20">
+      <div
+        className="h-[130px]"
+        style={{ background: "linear-gradient(135deg, #7857FF, #FF0073)" }}
+      />
+      <div className="px-4 md:px-10 lg:px-4 xl:px-20 -mt-11">
+        <div className="flex items-end justify-between gap-4">
+          <div className="flex items-end gap-4">
+            <Avatar
+              src={userData.profilePhoto}
+              name={userData.firstName}
+              size="xl"
+              className="border-4 border-base-1"
+            />
+          </div>
+          {!isOwnProfile && (
+            <Button size="sm" variant={isFollowing ? "secondary" : "primary"} onClick={handleFollow} className="mb-1.5">
+              {isFollowing ? "✓ Following" : "Follow"}
+            </Button>
+          )}
+        </div>
 
-  useEffect(() => {
-    if (user) {
-      getUser();
-    }
-  }, [user]);
+        <div className="flex items-center gap-2.5 mt-4">
+          <p className="font-display font-extrabold text-2xl tracking-tight">
+            {userData.firstName} {userData.lastName}
+          </p>
+          {userData.homeClub && <ClubBadge club={userData.homeClub} size="sm" />}
+        </div>
+        <p className="text-ink-3 text-[13px] font-semibold mt-0.5">
+          @{userData.userName} · {userData.collageName}
+        </p>
 
-  const handleFollow = async () => {
-    setIsFollowing(!isFollowing);
-    try {
-      const response = await fetch(
-        `/api/user/${user.id}/follow/${userData._id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const data = await response.json();
-      setUserInfo(data);
-
-      // Toggle following state
-      
-    } catch (error) {
-      console.error("Error updating follow status:", error);
-    }
-  };
-
-  return loading ? (
-    <Loader />
-  ) : (
-    <div className="flex flex-col gap-9">
-      <div className="flex justify-between items-start">
-        <div className="flex gap-5 items-start">
-          <img
-            src={userData.profilePhoto}
-            alt="profile photo"
-            width={100}
-            height={100}
-            className="rounded-full md:max-lg:hidden"
-          />
-
-          <div className="flex flex-col gap-3">
-            <p className="text-light-1 text-heading3-bold max-sm:text-heading4-bold">
-              {userData.firstName} {userData.lastName}
-            </p>
-            <p className="text-light-3 text-subtle-semibold">
-              @{userData.userName}
-            </p>
-            <div className="flex gap-7 text-small-bold max-sm:gap-4">
-              <div className="flex max-sm:flex-col gap-2 items-center max-sm:gap-0.5">
-                <p className="text-purple-1">{userData.posts.length}</p>
-                <p className="text-light-1">Posts</p>
-              </div>
-              <div className="flex max-sm:flex-col gap-2 items-center max-sm:gap-0.5">
-                <p className="text-purple-1">{userData.followers.length}</p>
-                <p className="text-light-1">Followers</p>
-              </div>
-              <div className="flex max-sm:flex-col gap-2 items-center max-sm:gap-0.5">
-                <p className="text-purple-1">{userData.following.length}</p>
-                <p className="text-light-1">Following</p>
-              </div>
-            </div>
+        <div className="flex gap-7 mt-4">
+          <div>
+            <span className="font-display font-extrabold text-lg">{userData.posts.length}</span>{" "}
+            <span className="text-ink-3 text-[13px] font-semibold">posts</span>
+          </div>
+          <div>
+            <span className="font-display font-extrabold text-lg">{userData.followers.length}</span>{" "}
+            <span className="text-ink-3 text-[13px] font-semibold">followers</span>
+          </div>
+          <div>
+            <span className="font-display font-extrabold text-lg">{userData.following.length}</span>{" "}
+            <span className="text-ink-3 text-[13px] font-semibold">following</span>
           </div>
         </div>
 
-        {user?.id !== userData.clerkId && (
-          isFollowing ? (
-            <PersonRemove
-              sx={{ color: "#7857FF", cursor: "pointer", fontSize: "40px" }}
-              onClick={handleFollow}
-            />
-          ) : (
-            <PersonAddAlt
-              sx={{ color: "#7857FF", cursor: "pointer", fontSize: "40px" }}
-              onClick={handleFollow}
-            />
-          )
-        )}
-      </div>
-
-      <div className="flex gap-6">
-        {tabs.map((tab) => (
-          <Link
-            key={tab.name} // Add key to prevent React warnings
-            className={`tab ${activeTab === tab.name ? "bg-purple-1" : "bg-dark-2"}`}
-            href={`/profile/${userData._id}/${tab.link}`}
-          >
-            {tab.name}
-          </Link>
-        ))}
+        <div className="flex gap-6 mt-5 border-b border-white/[0.08]">
+          {tabs.map((tab) => (
+            <Link
+              key={tab.name}
+              className={`pb-3 text-[14px] font-bold ${
+                activeTab === tab.name
+                  ? "text-white border-b-[2.5px] border-pink-1"
+                  : "text-ink-3"
+              }`}
+              href={`/profile/${userData._id}/${tab.link}`}
+            >
+              {tab.name}
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );

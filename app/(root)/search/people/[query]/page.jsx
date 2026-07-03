@@ -2,46 +2,35 @@
 
 import Loader from "@components/Loader";
 import UserCard from "@components/cards/UserCard";
-import Link from "next/link";
+import SearchTabs from "@components/ui/SearchTabs";
+import EmptyState from "@components/ui/EmptyState";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-
-import jwt from "jsonwebtoken";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import { useCurrentUser } from "@lib/hooks/useCurrentUser";
 
 const SearchPeople = () => {
   const { query } = useParams();
+  const searchedPeople = useQuery(api.users.searchUsers, { queryText: query });
+  const { currentUser, currentUserLoading } = useCurrentUser();
 
-  const [loading, setLoading] = useState(true);
+  if (searchedPeople === undefined || currentUserLoading || !currentUser) {
+    return <Loader />;
+  }
 
-  const [searchedPeople, setSearchedPeople] = useState([]);
+  return (
+    <div className="flex flex-col gap-6">
+      <SearchTabs query={query} active="people" />
 
-  const getSearchedPeople = async () => {
-    const response = await fetch(`/api/user/search/${query}`);
-    const data = await response.json();
-    setSearchedPeople(data);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    getSearchedPeople();
-  }, [query]);
-
-  return loading ? (
-    <Loader />
-  ) : (
-    <div className="flex flex-col gap-10">
-      <div className="flex gap-6">
-        <Link className="tab bg-dark-2" href={`/search/posts/${query}`}>
-          Posts
-        </Link>
-        <Link className="tab bg-purple-1" href={`/search/people/${query}`}>
-          People
-        </Link>
+      <div className="flex flex-col gap-4">
+        {searchedPeople.length === 0 ? (
+          <EmptyState emoji="🔍" title="Nothing found" subtitle={`No one matches "${decodeURIComponent(query)}".`} />
+        ) : (
+          searchedPeople.map((person) => (
+            <UserCard key={person._id} userData={person} currentUser={currentUser} />
+          ))
+        )}
       </div>
-
-      {searchedPeople.map((person) => (
-        <UserCard key={person._id} userData={person} update={getSearchedPeople}/>
-      ))}
     </div>
   );
 };

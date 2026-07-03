@@ -1,240 +1,134 @@
-import {
-  Bookmark,
-  BookmarkBorder,
-  BorderColor,
-  Delete,
-  Favorite,
-  FavoriteBorder,
-} from "@mui/icons-material";
+"use client";
+
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import PushPinIcon from '@mui/icons-material/PushPin';
-import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined';
-import PlaceIcon from '@mui/icons-material/Place';
+import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
+import Avatar from "@components/ui/Avatar";
+import ClubBadge, { CLUBS } from "@components/ui/ClubBadge";
+import WaveformPlayer from "@components/ui/WaveformPlayer";
+import { HeartIcon, CommentIcon, BookmarkIcon } from "@components/icons";
 
-const PostCard = ({ post, creator, loggedInUser, update }) => {
-  const [like, setLike] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [userData, setUserData] = useState(null); // Initial state is null
-  const [likeCount, setLikeCount] = useState(0);
-  const [initialLoad, setInitialLoad] = useState(true);
-  const [saveCount, setSaveCount] = useState(0)
+function timeAgo(timestamp) {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `${days}d`;
+}
 
+const PostCard = ({ post, currentUser }) => {
+  const toggleLike = useMutation(api.users.toggleLike);
+  const toggleSave = useMutation(api.users.toggleSave);
+  const removePost = useMutation(api.posts.remove);
+  const [popLike, setPopLike] = useState(false);
 
-  //for collage
-  
+  if (!post.creator || !currentUser) return null;
 
+  const isOwner = currentUser._id === post.creator._id;
+  const liked = currentUser.likedPosts?.some((id) => id === post._id);
+  const saved = currentUser.savedPosts?.some((id) => id === post._id);
+  const club = CLUBS[post.tag];
 
-  // Fetch user data function
-  const getUser = async () => {
-    try {
-      const response = await fetch(`/api/user/${loggedInUser.id}`);
-      const data = await response.json();
-      console.log("Fetched user data:", data); // Log the fetched user data for debugging
-      setUserData(data);
-    } catch (error) {
-      console.error("Failed to fetch user data:", error);
+  const handleLike = () => {
+    if (!liked && currentUser.pinsCount <= 0) return;
+    if (!liked) {
+      setPopLike(true);
+      setTimeout(() => setPopLike(false), 350);
     }
+    toggleLike({ userId: currentUser._id, postId: post._id });
   };
 
-  // Use useEffect to fetch the user data on component mount
-  useEffect(() => {
-    getUser();
-  }, []);
-
-  // Set the like and saved states based on the fetched userData
-  useEffect(() => {
-    if (userData && initialLoad) {
-      if (userData.likedPosts?.some((item) => String(item) === String(post._id))) {
-        setLike(true);
-      }
-      if (userData.savedPosts?.some((item) => String(item) === String(post._id))) {
-        setSaved(true);
-      }
-      setLikeCount(post.likes.length)
-      setSaveCount(post.tape.length)
-      setInitialLoad(false);
-    }
-  }, [userData, post._id, initialLoad]);
-
-  // Handle Save Post
-  const handleSave = async () => {
-    if(!saved){
-      setSaveCount(saveCount+1)
-    }
-    else {
-      setSaveCount(saveCount-1)
-    }
-    setSaved(!saved)
-    try {
-      const response = await fetch(
-        `/api/user/${loggedInUser.id}/save/${post._id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const data = await response.json();
-      setUserData(data);
-      update();
-    } catch (error) {
-      console.error("Failed to save the post:", error);
-    }
+  const handleSave = () => {
+    toggleSave({ userId: currentUser._id, postId: post._id });
   };
 
-  // Handle Like Post
-  const handleLike = async () => {
-    
-    if(userData.pinsCount>0){
-      if(!like){
-        setLikeCount(likeCount+1)
-      }
-      else{
-        setLikeCount(likeCount-1)
-      }
-      setLike(!like);
-
-    try {
-      const response = await fetch(
-        `/api/user/${loggedInUser.id}/like/${post._id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const data = await response.json();
-      setUserData(data);
-      update();
-    } catch (error) {
-      console.error("Failed to like the post:", error);
-    }
-  }
+  const handleDelete = () => {
+    if (!confirm("Delete this post?")) return;
+    removePost({ postId: post._id, creatorId: currentUser._id });
   };
-
-  // Handle Delete Post
-  const handleDelete = async () => {
-    try {
-      await fetch(`/api/post/${post._id}/${loggedInUser.id}`, {
-        method: "DELETE",
-      });
-      update();
-    } catch (error) {
-      console.error("Failed to delete the post:", error);
-    }
-  };
-
-  // Check if userData is still null or undefined, show a loading state if it is
-  if (!userData) {
-    return <p>Loading...</p>; // Show loading while data is being fetched
-  }
-
-  console.log("Is liked:", like); // Log the like state
-  console.log("Is saved:", saved); // Log the saved state
 
   return (
-    <div className="w-full max-w-xl rounded-lg flex flex-col gap-4 bg-dark-1 p-5 max-sm:gap-2">
-      <div className="flex justify-between">
-        <Link href={`/profile/${creator._id}/posts`}>
-          <div className="flex gap-3 items-center">
-            <img
-              src={creator.profilePhoto}
-              alt="profile photo"
-              width={50}
-              height={50}
-              className="rounded-full"
-            />
-            <div className="flex flex-col gap-1">
-              <p className="text-small-semibold text-light-1">
-                {creator.firstName} {creator.lastName}
-              </p>
-              <p className="text-subtle-medium text-light-3">
-                @{creator.username}
-              </p>
-              
-            </div>
-            
+    <div className="w-full max-w-xl rounded-[26px] bg-surface-1 border border-white/[0.06] overflow-hidden shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)]">
+      <div className="flex items-center gap-2.5 px-4 pt-3.5 pb-3">
+        <Link href={`/profile/${post.creator._id}/posts`} className="flex items-center gap-2.5 flex-1 min-w-0">
+          <Avatar src={post.creator.profilePhoto} name={post.creator.firstName} size="md" />
+          <div className="min-w-0">
+            <p className="font-extrabold text-[14px] truncate">
+              {post.creator.firstName} {post.creator.lastName}
+            </p>
+            <p className="text-[11px] text-ink-3 truncate">
+              {post.creator.collageName} · {timeAgo(post.createdAt)}
+            </p>
           </div>
         </Link>
+        {club && <ClubBadge club={post.tag} size="sm" />}
+      </div>
 
-        {loggedInUser.id === creator.clerkId && (
-          <Link href={`/edit-post/${post._id}`}>
-            <BorderColor sx={{ color: "white", cursor: "pointer" }} />
+      {post.postPhoto && (
+        <img src={post.postPhoto} alt="post" className="w-full max-h-[420px] object-cover" />
+      )}
+
+      {post.postAudio && (
+        <div className="px-3.5 py-3">
+          <WaveformPlayer
+            src={post.postAudio}
+            gradientFrom={club?.from || "#7857FF"}
+            gradientTo={club?.to || "#FF0073"}
+          />
+        </div>
+      )}
+
+      <div className="flex items-center gap-4 px-4 pt-3">
+        <button
+          type="button"
+          onClick={handleLike}
+          className="flex items-center gap-1.5 font-extrabold text-[13px]"
+          style={{ color: liked ? "#FF0073" : "#C3BED2" }}
+        >
+          <HeartIcon size={21} filled={liked} className={popLike ? "animate-yv-pop" : ""} />
+          {post.likesCount}
+        </button>
+        <span className="flex items-center gap-1.5 font-bold text-[13px] text-ink-4">
+          <CommentIcon size={20} />
+        </span>
+        <button
+          type="button"
+          onClick={handleSave}
+          className="ml-auto flex items-center gap-1.5 font-extrabold text-[13px]"
+          style={{ color: saved ? "#7857FF" : "#C3BED2" }}
+        >
+          <BookmarkIcon size={20} filled={saved} />
+          {post.tapeCount}
+        </button>
+      </div>
+
+      <p className="px-4 pt-2 text-[14px] text-[#E8E5F0] leading-relaxed">
+        <span className="font-extrabold">{post.creator.userName}</span> {post.caption}
+      </p>
+
+      {isOwner ? (
+        <div className="flex gap-2 px-4 pt-3 pb-4">
+          <Link
+            href={`/edit-post/${post._id}`}
+            className="flex-1 text-center py-2 rounded-xl bg-surface-2 border border-white/[0.06] text-ink-2 font-extrabold text-[12px]"
+          >
+            ✏️ Edit
           </Link>
-        )}
-      </div>
-
-      <p className="text-body-normal text-light-1 max-sm:text-small-normal">
-        {post.caption}
-      </p>
-
-      <img
-        src={post.postPhoto}
-        alt="post photo"
-        width={200}
-        height={150}
-        className="rounded-lg w-full"
-      />
-
-        <audio controls className="w-full mt-4">
-          <source src={post.postAudio} type="audio/mpeg" />
-          Your browser does not support the audio element.
-        </audio>
-
-      <p className="text-base-semibold text-purple-1 max-sm:text-small-normal">
-        #{post.tag} <span className="text-xl m-4 text-bold">
-                <span><PlaceIcon
-              sx={{ color: "white", cursor: "pointer", fontSize:"5" }}
-              onClick={handleSave}
-            /></span>
-                {creator.collage}
-              </span>
-      </p>
-      
-
-      <div className="flex justify-between">
-        <div className="flex gap-2 items-center">
-          {!like ? (
-            <PushPinIcon
-              sx={{ color: "white", cursor: "pointer" }}
-              onClick={handleLike}
-            />
-          ) : (
-            <PushPinIcon
-              sx={{ color: "red", cursor: "pointer" }}
-              onClick={handleLike}
-            />
-          )}
-          <p className="text-light-1">{likeCount}</p>
-        </div>
-        {loggedInUser.id === creator.clerkId && (
-          <Delete
-            sx={{ color: "white", cursor: "pointer" }}
+          <button
+            type="button"
             onClick={handleDelete}
-          />
-        )}
-        <div className="flex gap-2 items-center">
-          {(saved ?(
-            <LocalHospitalOutlinedIcon
-            sx={{ color: "purple", cursor: "pointer" }}
-            onClick={handleSave}
-          />
-          ) : (
-            <LocalHospitalOutlinedIcon
-              sx={{ color: "white", cursor: "pointer" }}
-              onClick={handleSave}
-            />
-          ))}
-          <p className="text-light-1">{saveCount}</p>
+            className="flex-1 text-center py-2 rounded-xl bg-danger/10 border border-danger/25 text-danger font-extrabold text-[12px]"
+          >
+            🗑 Delete
+          </button>
         </div>
-
-        
-
-       
-      </div>
+      ) : (
+        <div className="pb-4" />
+      )}
     </div>
   );
 };

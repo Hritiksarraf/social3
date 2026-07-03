@@ -1,25 +1,3 @@
-import {
-  Home,
-  AddPhotoAlternateOutlined,
-  GroupOutlined,
-  BookmarksOutlined,
-  FavoriteBorder,
-} from "@mui/icons-material";
-
-export const sidebarLinks = [
-  {
-    icon: <Home sx={{ color: "white", fontSize: "26px" }} />,
-    route: "/",
-    label: "Home",
-  },
-  {
-    icon: <AddPhotoAlternateOutlined sx={{ color: "white", fontSize: "26px" }} />,
-    route: "/create-post",
-    label: "Create Post",
-  },
-  
-];
-
 export const pageTitles = [
   {
     url: "/",
@@ -38,11 +16,7 @@ export const pageTitles = [
     title: "Edit Post",
   },
   {
-    url: "/search", 
-    title: "Search",
-  },
-  {
-    url: "/search", 
+    url: "/search",
     title: "Search",
   },
   {
@@ -52,7 +26,11 @@ export const pageTitles = [
   {
     url: "/liked-posts",
     title: "Liked Posts",
-  }
+  },
+  {
+    url: "/locate",
+    title: "Map",
+  },
 ];
 
 export const tabs = [

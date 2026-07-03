@@ -1,54 +1,42 @@
 "use client";
 
 import Loader from "@components/Loader";
-import PostCard from "@components/cards/PostCard";
 import ProfileCard from "@components/cards/ProfileCard";
+import EmptyState from "@components/ui/EmptyState";
 import { useParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import jwt from "jsonwebtoken";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import { useCurrentUser } from "@lib/hooks/useCurrentUser";
 
 const ProfilePosts = () => {
   const { id } = useParams();
+  const userData = useQuery(api.users.getProfile, { userId: id });
+  const { currentUser, currentUserLoading } = useCurrentUser();
 
-  const [loading, setLoading] = useState(true);
+  if (userData === undefined || currentUserLoading || !currentUser) {
+    return <Loader />;
+  }
 
-  const [userData, setUserData] = useState({});
+  return (
+    <div className="flex flex-col gap-6">
+      <ProfileCard userData={userData} activeTab="Posts" currentUser={currentUser} />
 
-  const [user, setUser] = useState(null);
-
-  const getUser = async () => {
-    const response = await fetch(`/api/user/profile/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await response.json();
-    setUserData(data);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const decodedUser = jwt.decode(token); // Decode user from token
-      setUser(decodedUser); // Set user
-    }
-    getUser();
-  }, [id]);
-
-
-  return loading ? (
-    <Loader />
-  ) : (
-    <div className="flex flex-col gap-9">
-      <ProfileCard userData={userData} activeTab="Posts" />
-
-      <div className="flex flex-col gap-9">
-        {userData?.posts?.map((post) => (
-          <PostCard key={post._id} post={post} creator={post.creator} loggedInUser={user} update={getUser}/>
-        ))}
-      </div>
+      {userData.posts.length === 0 ? (
+        <EmptyState emoji="📸" title="No posts yet" subtitle={`${userData.firstName} hasn't shared anything yet.`} />
+      ) : (
+        <div className="grid grid-cols-3 gap-1.5">
+          {userData.posts.map((post) => (
+            <div key={post._id} className="relative aspect-square rounded-xl overflow-hidden bg-surface-2">
+              {post.postPhoto && (
+                <img src={post.postPhoto} alt="" className="w-full h-full object-cover" />
+              )}
+              {post.postAudio && (
+                <span className="absolute top-1.5 right-1.5 text-xs drop-shadow">🔊</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -2,23 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Clerk Auth forms */
-.cl-formButtonPrimary {
-  @apply bg-purple-1;
-}
-
-.cl-formButtonPrimary:hover {
-  @apply bg-pink-1;
-}
-
-.cl-footerActionLink {
-  @apply text-purple-1;
-}
-
-.cl-footerActionLink:hover {
-  @apply text-pink-1;
-}
-
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
     width: 3px;
@@ -27,27 +10,11 @@
   }
 }
 
-/* Profile Info */
-.input {
-  @apply  bg-dark-1 p-2.5 rounded-lg border-none focus:outline-none mt-3 text-light-1
+/* Leaflet divIcon markers render outside React, so they get plain CSS instead of Tailwind classes. */
+@keyframes yv-map-pulse {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(2.2); opacity: 0; }
 }
-
-/* Top Bar */
-.search-bar {
-  @apply w-full bg-dark-2 py-3 px-5 rounded-lg focus:outline-none text-light-1 text-small-semibold
-}
-.create-post-btn {
-  @apply flex items-center gap-2 rounded-lg py-2.5 px-3 bg-gradient-to-l from-pink-1 to-purple-1 text-light-1 text-small-semibold max-md:hidden
-}
-
-.search-icon {
-  @apply absolute top-2 right-2 text-light-1 cursor-pointer hover:text-pink-1
-}
-
-/* Tabs */
-.tab {
-  @apply px-4 py-2 rounded-lg text-light-1 text-small-bold
-}
-.locate-map{
-  @apply flex items-center gap-2 rounded-lg py-2.5 px-3 bg-gradient-to-tr from-[#e0c3fc] to-[#8ec5fc];
+.yv-map-pulse {
+  animation: yv-map-pulse 1.8s ease-out infinite;
 }

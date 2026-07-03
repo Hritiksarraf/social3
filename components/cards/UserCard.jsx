@@ -1,103 +1,38 @@
 "use client";
 
-import Loader from "@components/Loader";
-import { PersonAddAlt, PersonRemove } from "@mui/icons-material";
-import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import jwt from "jsonwebtoken";
+import { useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
+import Avatar from "@components/ui/Avatar";
+import Button from "@components/ui/Button";
 
-const UserCard = ({ userData, update }) => {
-  
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [userInfo, setUserInfo] = useState({});
+const UserCard = ({ userData, currentUser }) => {
+  const toggleFollow = useMutation(api.users.toggleFollow);
 
-  const getUser = async () => {
-    try {
-      const response = await fetch(`/api/user/${user.id}`);
-      const data = await response.json();
-      setUserInfo(data);
-      setLoading(false);
-      setIsLoaded(true);
+  const isFollowing = currentUser?.following?.some((id) => id === userData._id);
+  const isOwnProfile = currentUser?._id === userData._id;
 
-      // Check if the current user is following userData
-      const following = data?.following?.some(
-        (item) => String(item) == String(userData._id)
-      );
-      setIsFollowing(following); // Set the following state based on the check
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
+  const handleFollow = () => {
+    toggleFollow({ userId: currentUser._id, followId: userData._id });
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token && !user) {
-      const decodedUser = jwt.decode(token);
-      setUser(decodedUser);
-    }
-  }, []); // Only run on the first render
-
-  useEffect(() => {
-    if (user) {
-      getUser();
-    }
-  }, [user]);
-  const handleFollow = async () => {
-    setIsFollowing(!isFollowing);
-    const response = await fetch(
-      `/api/user/${user.id}/follow/${userData._id}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    const data = await response.json();
-    setUserInfo(data);
-    update();
-  };
-
-  return loading ? (
-    <Loader />
-  ) : (
-    <div className="flex justify-between items-center">
-      <Link className="flex gap-4 items-center" href={`/profile/${userData._id}/posts`}>
-        <img
-          src={userData.profilePhoto}
-          alt="profile photo"
-          width={50}
-          height={50}
-          className="rounded-full"
-        />
-        <div className="flex flex-col gap-1">
-          <p className="text-small-semibold text-light-1">
+  return (
+    <div className="flex justify-between items-center py-1 w-full max-w-xl">
+      <Link className="flex gap-3 items-center min-w-0" href={`/profile/${userData._id}/posts`}>
+        <Avatar src={userData.profilePhoto} name={userData.firstName} size="md" />
+        <div className="min-w-0">
+          <p className="font-extrabold text-[14px] truncate">
             {userData.firstName} {userData.lastName}
           </p>
-          <p className="text-subtle-medium text-light-3">
-            @{userData.userName}
-          </p>
+          <p className="text-[12px] text-ink-3 truncate">@{userData.userName}</p>
         </div>
       </Link>
 
-      {user.id !== userData.clerkId &&
-        (isFollowing ? (
-          <PersonRemove
-            sx={{ color: "#7857FF", cursor: "pointer" }}
-            onClick={() => handleFollow()}
-          />
-        ) : (
-          <PersonAddAlt
-            sx={{ color: "#7857FF", cursor: "pointer" }}
-            onClick={() => {
-              handleFollow();
-            }}
-          />
-        ))}
+      {!isOwnProfile && (
+        <Button size="sm" variant={isFollowing ? "secondary" : "primary"} onClick={handleFollow}>
+          {isFollowing ? "✓ Following" : "Follow"}
+        </Button>
+      )}
     </div>
   );
 };

@@ -1,123 +1,101 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import Menu from './Menu';
-import { Logout } from '@mui/icons-material';
-import { dark } from "@clerk/themes";
-import Loader from "@components/Loader";
-import PushPinIcon from '@mui/icons-material/PushPin';
-import jwt from "jsonwebtoken";
-import LogoutIcon from '@mui/icons-material/Logout';
 import { useRouter } from 'next/navigation';
+import Menu from './Menu';
+import Loader from "@components/Loader";
+import Avatar from "@components/ui/Avatar";
+import { PlusIcon } from "@components/icons";
+import { CLUBS, CLUB_KEYS } from "@components/ui/ClubBadge";
+import { useCurrentUser } from '@lib/hooks/useCurrentUser';
+import { useSupabase } from '@lib/supabase/SupabaseProvider';
 
 function LeftSideBar() {
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [userData, setUserData] = useState({});
-    const [user, setUser] = useState(null);  // Set initial value to null
     const router = useRouter();
+    const { supabase } = useSupabase();
+    const { authLoading, currentUser, currentUserLoading } = useCurrentUser();
 
-    const getUser = async () => {
-        try {
-            const response = await fetch(`/api/user/${user.id}`);
-            const data = await response.json();
-            setUserData(data);
-            setLoading(false);
-            setIsLoaded(true);
-            console.log(data);
-        } catch (error) {
-            console.error("Error fetching user data:", error);
-        }
-    };
-
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token && !user) {
-            const decodedUser = jwt.decode(token);
-            setUser(decodedUser);
-            console.log(decodedUser);
-        }
-    }, []); // Only run on the first render
-
-    useEffect(() => {
-        if (user) {
-            getUser();
-        }
-    }, [user]); // Runs when 'user' is updated
-
-    if (loading || !isLoaded) {
+    if (authLoading || currentUserLoading || !currentUser) {
         return <Loader />;
     }
 
-    const handleLogOut =()=>{
-        const token = localStorage.getItem("token");
-        if(token){
-            localStorage.removeItem('token');
-            router.push('/sign-in')
-        }
-    }
+    const handleLogOut = async () => {
+        await supabase.auth.signOut();
+        router.push('/sign-in');
+    };
 
     return (
-        <div className="h-screen left-0 top-0 sticky overflow-auto px-10 py-6 flex flex-col gap-6 max-md:hidden 2xl:w-[350px] pr-20 custom-scrollbar">
-            <Link href="/">
-                <Image src="/assets/logovani.png" alt="logo" width={200} height={200} className="ml-4 -mb-4" />
+        <div className="h-screen left-0 top-0 sticky overflow-auto px-5 py-6 flex flex-col max-md:hidden 2xl:w-[300px] w-[260px] custom-scrollbar">
+            <Link href="/" className="flex items-center gap-2.5 px-2 mb-6">
+                <div
+                    className="w-9 h-9 rounded-[10px] flex items-center justify-center -rotate-3"
+                    style={{ background: "linear-gradient(135deg, #7857FF, #FF0073)" }}
+                >
+                    <div className="flex gap-[2px] items-end h-4">
+                        <span className="w-[3px] bg-white rounded-sm" style={{ height: 6 }} />
+                        <span className="w-[3px] bg-white rounded-sm" style={{ height: 15 }} />
+                        <span className="w-[3px] bg-white rounded-sm" style={{ height: 10 }} />
+                    </div>
+                </div>
+                <span className="font-display font-extrabold text-xl tracking-tight">Yuva Vaani</span>
             </Link>
-            <div className="flex flex-col gap-2">
-                <div className="flex flex-col gap-2 items-center text-light-1">
-                    <Link href={`/profile/${userData._id}/posts`}>
-                        <img
-                            src={userData?.profilePhoto}
-                            alt="profile photo"
-                            width={50}
-                            height={50}
-                            className="rounded-full"
-                        />
-                    </Link>
-                    <p className="text-small-bold">
-                        {userData?.firstName} {userData?.lastName}
-                    </p>
-                </div>
-                <div className="flex text-light-1 justify-between">
-                    <div className="flex flex-col items-center">
-                        <p className="text-base-bold">{userData?.posts?.length}</p>
-                        <p className="text-tiny-medium">Posts</p>
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <p className="text-base-bold">{userData?.followers?.length}</p>
-                        <p className="text-tiny-medium">Followers</p>
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <p className="text-base-bold">{userData?.following?.length}</p>
-                        <p className="text-tiny-medium">Following</p>
-                    </div>
-                </div>
-            </div>
-            <hr />
-            <Menu />
-            <p className="text-light-1 mx-3 text-body-bold">
-                <span>
-                    <PushPinIcon sx={{ color: "#7857FF", cursor: "pointer" }} />
-                </span>
-                {userData?.pinsCount} left
+
+            <Menu currentUser={currentUser} />
+
+            <button
+                onClick={() => router.push("/create-post")}
+                className="mt-2 py-3.5 rounded-full font-extrabold text-[15px] flex items-center justify-center gap-2 text-white"
+                style={{
+                    background: "linear-gradient(135deg, #7857FF, #FF0073)",
+                    boxShadow: "0 14px 28px -10px rgba(120,87,255,0.9)",
+                }}
+            >
+                <PlusIcon size={18} strokeWidth={2.6} color="#fff" />
+                New post
+            </button>
+
+            <p className="text-[11px] font-extrabold tracking-[0.12em] uppercase text-ink-4 mt-6 mb-3 px-2">
+                Clubs
             </p>
-            <hr />
-            <div className="gap-4 items-center">
-                {/* Uncomment the UserButton when you're ready to use it */}
-                {/* <UserButton appearance={{ baseTheme: dark }} afterSignOutUrl="/sign-in" /> */}
-                <p className="text-light-1 text-body-bold">Manage Account</p>
-                <button onClick={handleLogOut} className="text-light-1 pt-2 text-body-bold">Log out <LogoutIcon/></button>
-                
+            <div className="flex flex-col gap-1 px-1">
+                {CLUB_KEYS.map((key) => {
+                    const c = CLUBS[key];
+                    return (
+                        <Link
+                            key={key}
+                            href={`/?club=${key}`}
+                            className="flex items-center gap-2.5 text-sm font-bold text-ink-2 hover:text-white py-1"
+                        >
+                            <span
+                                className="w-[22px] h-[22px] rounded-[7px]"
+                                style={{ background: `linear-gradient(135deg, ${c.from}, ${c.to})` }}
+                            />
+                            {c.label}
+                        </Link>
+                    );
+                })}
             </div>
-            {/* Uncomment the SignedIn block when you're ready to use it */}
-            {/* <SignedIn>
-                <SignOutButton afterSignOutUrl="/sign-in">
-                    <div className="flex cursor-pointer gap-4 items-center">
-                        <Logout sx={{ color: "white", fontSize: "32px" }} />
-                        <p className="text-body-bold text-light-1">Log out</p>
-                    </div>
-                </SignOutButton>
-            </SignedIn> */}
+
+            <p className="text-light-1 mx-2 mt-6 text-sm font-bold flex items-center gap-2">
+                📌 {currentUser?.pinsCount} pins left
+            </p>
+
+            <div className="mt-auto flex items-center gap-2.5 bg-surface-1 rounded-2xl px-2.5 py-2 pt-4">
+                <Link href={`/profile/${currentUser._id}/posts`}>
+                    <Avatar src={currentUser.profilePhoto} name={currentUser.firstName} size="sm" />
+                </Link>
+                <div className="flex-1 min-w-0">
+                    <p className="font-extrabold text-[13px] truncate">{currentUser?.firstName} {currentUser?.lastName}</p>
+                    <p className="text-[11px] text-ink-3 truncate">@{currentUser?.userName}</p>
+                </div>
+                <button
+                    onClick={handleLogOut}
+                    aria-label="Log out"
+                    className="text-ink-3 hover:text-danger text-xs font-extrabold px-2"
+                >
+                    Log out
+                </button>
+            </div>
         </div>
     );
 }

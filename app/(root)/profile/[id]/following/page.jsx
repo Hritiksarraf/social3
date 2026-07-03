@@ -3,42 +3,34 @@
 import Loader from "@components/Loader";
 import ProfileCard from "@components/cards/ProfileCard";
 import UserCard from "@components/cards/UserCard";
+import EmptyState from "@components/ui/EmptyState";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import { useCurrentUser } from "@lib/hooks/useCurrentUser";
+import { focusSearch } from "@lib/focusSearch";
 
 const Following = () => {
   const { id } = useParams();
+  const userData = useQuery(api.users.getProfile, { userId: id });
+  const { currentUser, currentUserLoading } = useCurrentUser();
 
-  const [loading, setLoading] = useState(true);
+  if (userData === undefined || currentUserLoading || !currentUser) {
+    return <Loader />;
+  }
 
-  const [userData, setUserData] = useState({});
+  return (
+    <div className="flex flex-col gap-6">
+      <ProfileCard userData={userData} activeTab="Following" currentUser={currentUser} />
 
-  const getUser = async () => {
-    const response = await fetch(`/api/user/profile/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await response.json();
-    setUserData(data);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    getUser();
-  }, [id]);
-
-  return loading ? (
-    <Loader />
-  ) : (
-    <div className="flex flex-col gap-9">
-      <ProfileCard userData={userData} activeTab="Following" />
-
-      <div className="flex flex-col gap-9">
-        {userData?.following?.map((person) => (
-          <UserCard key={person._id} userData={person} update={getUser}/>
-        ))}
+      <div className="flex flex-col gap-4">
+        {userData.following.length === 0 ? (
+          <EmptyState emoji="👥" title="Not following anyone yet" actionLabel="Find people" onAction={focusSearch} />
+        ) : (
+          userData.following.map((person) => (
+            <UserCard key={person._id} userData={person} currentUser={currentUser} />
+          ))
+        )}
       </div>
     </div>
   );
